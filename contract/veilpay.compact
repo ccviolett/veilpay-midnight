@@ -1,0 +1,495 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 VeilPay Contributors
+//
+// VeilPay — Shielded Corporate Payroll & Selective-Disclosure Compliance Vault
+// Built for Midnight Network (Compact Language 0.28 / Toolchain 0.36.1)
+//
+// Dual-Ledger Architecture:
+// - Public Ledger: Governance budget caps, salary band limits, headcount counters,
+//   hiding running-total commitments, append-only HistoricMerkleTree of voucher
+//   commitments, unlinkable claimed nullifiers, and selective-disclosure receipts.
+// - Private State (Local Device Only): Admin/Auditor/Employee 32-byte secret keys,
+//   individual salaries, employee identities, cumulative spend accumulator openings,
+//   blinding salts, and Merkle inclusion paths.
+//
+// Security Design:
+// - Every role identity is derived from a local 32-byte secret key bound to
+//   `kernel.self().bytes` (cross-contract replay resistant). `ownPublicKey()` is
+//   intentionally never used for authorization.
+// - All sensitive values (salaries, totals, employee keys) are hidden inside
+//   `persistentCommit` commitments with high-entropy salts to defeat brute-force
+//   dictionary attacks.
+// - `claimVoucher` and `proveIncomeThreshold` prove HistoricMerkleTree inclusion
+//   inside ZK without disclosing which voucher leaf is being used.
+
+pragma language_version 0.28;
+
+import CompactStandardLibrary;
+
+// --- Nominal Types & Domain Structs -----------------------------------------
+
+export new type SecretKey = Bytes<32>;
+export new type AdminPublicKey = Bytes<32>;
+export new type EmployeePublicKey = Bytes<32>;
+export new type Nullifier = Bytes<32>;
+export new type AttestationId = Bytes<32>;
+
+export enum RunStatus {
+  Open,
+  Finalized,
+  Audited,
+}
+
+export struct PayrollRun {
+  budgetCap: Uint<64>;
+  minAllocation: Uint<64>;
+  maxAllocation: Uint<64>;
+  expectedHeadcount: Uint<16>;
+  issuedCount: Uint<16>;
+  claimedCount: Uint<16>;
+  status: RunStatus;
+}
+
+// Private payload committed via persistentCommit; never stored raw on chain.
+struct VoucherPayload {
+  runId: Uint<32>;
+  recipientKey: Bytes<32>;
+  amount: Uint<64>;
+}
+
+struct NullifierPreimage {
+  domain: Bytes<32>;
+  instance: Bytes<32>;
+  secretKey: Bytes<32>;
+  runId: Uint<32>;
+  salt: Bytes<32>;
+}
+
+struct AttestationPreimage {
+  domain: Bytes<32>;
+  instance: Bytes<32>;
+  employeeKey: Bytes<32>;
+  runId: Uint<32>;
+  verifierTag: Bytes<32>;
+  thresholdAmount: Uint<64>;
+}
+
+export struct IncomeAttestation {
+  runId: Uint<32>;
+  thresholdAmount: Uint<64>;
+  verifierTag: Bytes<32>;
+}
+
+// --- Public Ledger State ----------------------------------------------------
+
+// Immutable organization identifier sealed at contract deployment.
+export sealed ledger organizationId: Bytes<32>;
+
+// Rotatable witness-derived public keys for Treasury Admin and Compliance Auditor.
+export ledger treasuryAdmin: AdminPublicKey;
+export ledger complianceAuditor: AdminPublicKey;
+
+// Monotonic payroll run ID counter (runs are 1-indexed).
+export ledger runCount: Counter;
+
+// Public governance metadata and counters per payroll run (zero salaries disclosed).
+export ledger payrollRuns: Map<Uint<32>, PayrollRun>;
+
+// Hiding commitment to the cumulative hidden spend of each payroll run.
+export ledger runningTotalCommitments: Map<Uint<32>, Bytes<32>>;
+
+// Populated ONLY when an authorized auditor executes selective aggregate disclosure.
+export ledger auditedTotals: Map<Uint<32>, Uint<64>>;
+
+// Append-only HistoricMerkleTree (capacity 1,024 vouchers) of hiding voucher commitments.
+// Historic root checking allows concurrent claims without path invalidation.
+export ledger voucherTree: HistoricMerkleTree<10, Bytes<32>>;
+
+// Unlinkable nullifiers preventing double-claims without revealing which voucher was claimed.
+export ledger claimedNullifiers: Set<Nullifier>;
+
+// Verifiable selective-disclosure receipts proving `salary >= thresholdAmount`.
+export ledger incomeAttestations: Map<AttestationId, IncomeAttestation>;
+
+// --- Private Local Witnesses ------------------------------------------------
+
+// Caller's 32-byte secret key kept exclusively in local private state.
+witness localSecretKey(): SecretKey;
+
+// Treasury / Auditor private accumulator opening: [currentRunningTotal, currentRunSalt].
+witness getAccumulatorOpening(runId: Uint<32>): [Uint<64>, Bytes<32>];
+
+// Fresh 32-byte blinding salt for initializing or advancing a run's total commitment.
+witness nextRunSalt(runId: Uint<32>): Bytes<32>;
+
+// Treasury private voucher issuance input: [employeePubKey, salaryAmount, voucherSalt].
+witness getIssueVoucherSecret(): [Bytes<32>, Uint<64>, Bytes<32>];
+
+// Employee private voucher secret received off-chain: [salaryAmount, voucherSalt].
+witness getClaimVoucherSecret(): [Uint<64>, Bytes<32>];
+
+// Employee local Merkle inclusion path for their hidden voucher commitment.
+witness getVoucherPath(commitment: Bytes<32>): MerkleTreePath<10, Bytes<32>>;
+
+// --- Pure Cryptographic Derivation Circuits (Callable Off-Chain) ------------
+
+// Admin and Auditor keys bind to the immutable sealed `organizationId` because
+// a Midnight contract's final address (`kernel.self()`) is derived from its
+// initial state and is therefore not yet finalized inside `constructor()`.
+export pure circuit deriveAdminKey(sk: Bytes<32>, orgId: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([pad(32, "veilpay:admin:v1"), orgId, sk]);
+}
+
+export pure circuit deriveAuditorKey(sk: Bytes<32>, orgId: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([pad(32, "veilpay:auditor:v1"), orgId, sk]);
+}
+
+// Post-deployment employee identities, nullifiers, and selective-disclosure
+// attestations bind directly to `kernel.self().bytes` for cross-contract replay protection.
+export pure circuit deriveEmployeeKey(sk: Bytes<32>, instance: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([pad(32, "veilpay:employee:v1"), instance, sk]);
+}
+
+export pure circuit computeTotalCommitment(total: Uint<64>, salt: Bytes<32>): Bytes<32> {
+  return persistentCommit<Uint<64>>(total, salt);
+}
+
+export pure circuit computeVoucherCommitment(
+  runId: Uint<32>,
+  recipientKey: Bytes<32>,
+  amount: Uint<64>,
+  salt: Bytes<32>
+): Bytes<32> {
+  return persistentCommit<VoucherPayload>(
+    VoucherPayload { runId: runId, recipientKey: recipientKey, amount: amount },
+    salt
+  );
+}
+
+export pure circuit deriveNullifier(
+  sk: Bytes<32>,
+  runId: Uint<32>,
+  salt: Bytes<32>,
+  instance: Bytes<32>
+): Bytes<32> {
+  return persistentHash<NullifierPreimage>(
+    NullifierPreimage {
+      domain: pad(32, "veilpay:nullifier:v1"),
+      instance: instance,
+      secretKey: sk,
+      runId: runId,
+      salt: salt,
+    }
+  );
+}
+
+export pure circuit deriveAttestationId(
+  employeeKey: Bytes<32>,
+  runId: Uint<32>,
+  verifierTag: Bytes<32>,
+  thresholdAmount: Uint<64>,
+  instance: Bytes<32>
+): Bytes<32> {
+  return persistentHash<AttestationPreimage>(
+    AttestationPreimage {
+      domain: pad(32, "veilpay:attestation:v1"),
+      instance: instance,
+      employeeKey: employeeKey,
+      runId: runId,
+      verifierTag: verifierTag,
+      thresholdAmount: thresholdAmount,
+    }
+  );
+}
+
+// --- Internal Authorization Helpers -----------------------------------------
+
+circuit requireTreasuryAdmin(): [] {
+  const sk = localSecretKey();
+  const callerKey = deriveAdminKey(sk as Bytes<32>, organizationId);
+  assert(disclose(callerKey) == (treasuryAdmin as Bytes<32>), "Caller is not the treasury admin");
+}
+
+circuit requireAuditorOrAdmin(): [] {
+  const sk = localSecretKey();
+  const isAuditor = disclose(deriveAuditorKey(sk as Bytes<32>, organizationId)) == (complianceAuditor as Bytes<32>);
+  const isAdmin = disclose(deriveAdminKey(sk as Bytes<32>, organizationId)) == (treasuryAdmin as Bytes<32>);
+  assert(isAuditor || isAdmin, "Caller is not authorized to audit payroll");
+}
+
+// --- Constructor ------------------------------------------------------------
+
+constructor(orgId: Bytes<32>) {
+  const disclosedOrg = disclose(orgId);
+  assert(disclosedOrg != default<Bytes<32>>, "Organization ID cannot be empty");
+  organizationId = disclosedOrg;
+
+  const sk = localSecretKey();
+  treasuryAdmin = disclose(deriveAdminKey(sk as Bytes<32>, disclosedOrg)) as AdminPublicKey;
+  complianceAuditor = disclose(deriveAuditorKey(sk as Bytes<32>, disclosedOrg)) as AdminPublicKey;
+}
+
+// --- Governance & Key Rotation Circuits -------------------------------------
+
+export circuit rotateAdmin(newAdminKey: AdminPublicKey): [] {
+  requireTreasuryAdmin();
+  const nextAdmin = disclose(newAdminKey);
+  assert((nextAdmin as Bytes<32>) != default<Bytes<32>>, "New admin key cannot be zero");
+  treasuryAdmin = nextAdmin;
+}
+
+export circuit setComplianceAuditor(newAuditorKey: AdminPublicKey): [] {
+  requireTreasuryAdmin();
+  const nextAuditor = disclose(newAuditorKey);
+  assert((nextAuditor as Bytes<32>) != default<Bytes<32>>, "Auditor key cannot be zero");
+  complianceAuditor = nextAuditor;
+}
+
+// --- Payroll Lifecycle Circuits ---------------------------------------------
+
+export circuit createPayrollRun(
+  budgetCap: Uint<64>,
+  minAllocation: Uint<64>,
+  maxAllocation: Uint<64>,
+  expectedHeadcount: Uint<16>
+): Uint<32> {
+  requireTreasuryAdmin();
+
+  const pubBudget = disclose(budgetCap);
+  const pubMin = disclose(minAllocation);
+  const pubMax = disclose(maxAllocation);
+  const pubHeadcount = disclose(expectedHeadcount);
+
+  assert(pubBudget > 0, "Budget cap must be positive");
+  assert(pubMin > 0, "Minimum allocation must be positive");
+  assert(pubMin <= pubMax, "Minimum allocation cannot exceed maximum");
+  assert(pubMax <= pubBudget, "Maximum allocation cannot exceed budget cap");
+  assert(pubHeadcount > 0 && pubHeadcount <= 1024, "Expected headcount must be between 1 and 1024");
+
+  runCount.increment(1);
+  const runId = runCount.read() as Uint<32>;
+
+  const initialSalt = nextRunSalt(runId);
+  assert(initialSalt != default<Bytes<32>>, "Initial accumulator salt must be non-zero");
+
+  payrollRuns.insert(
+    runId,
+    PayrollRun {
+      budgetCap: pubBudget,
+      minAllocation: pubMin,
+      maxAllocation: pubMax,
+      expectedHeadcount: pubHeadcount,
+      issuedCount: 0 as Uint<16>,
+      claimedCount: 0 as Uint<16>,
+      status: RunStatus.Open,
+    }
+  );
+
+  runningTotalCommitments.insert(runId, computeTotalCommitment(0 as Uint<64>, initialSalt));
+  return runId;
+}
+
+export circuit issueVoucher(runId: Uint<32>): [] {
+  requireTreasuryAdmin();
+
+  const rid = disclose(runId);
+  assert(payrollRuns.member(rid), "Payroll run does not exist");
+
+  const run = payrollRuns.lookup(rid);
+  assert(run.status == RunStatus.Open, "Payroll run is no longer open for issuance");
+  assert(run.issuedCount < run.expectedHeadcount, "Payroll run headcount limit reached");
+
+  const [prevTotal, prevSalt] = getAccumulatorOpening(rid);
+  const newSalt = nextRunSalt(rid);
+  const [recipientKey, salaryAmount, voucherSalt] = getIssueVoucherSecret();
+
+  // Validate private witnesses inside ZK (zero leakage to ledger).
+  assert(recipientKey != default<Bytes<32>>, "Recipient public key cannot be zero");
+  assert(voucherSalt != default<Bytes<32>>, "Voucher salt must be non-zero");
+  assert(newSalt != default<Bytes<32>>, "New accumulator salt must be non-zero");
+  assert(newSalt != prevSalt, "New accumulator salt must differ from previous salt");
+
+  // Verify the previous private cumulative total opens the public commitment.
+  assert(
+    runningTotalCommitments.lookup(rid) == computeTotalCommitment(prevTotal, prevSalt),
+    "Accumulator witness does not match committed running total"
+  );
+
+  // Enforce public compensation band and budget cap strictly inside ZK.
+  assert(salaryAmount >= run.minAllocation, "Salary is below payroll run minimum band");
+  assert(salaryAmount <= run.maxAllocation, "Salary exceeds payroll run maximum band");
+  assert(prevTotal <= run.budgetCap, "Committed total already exceeds budget cap");
+  assert(
+    salaryAmount <= ((run.budgetCap - prevTotal) as Uint<64>),
+    "Issuing voucher would exceed payroll run budget cap"
+  );
+
+  const newTotal = (prevTotal + salaryAmount) as Uint<64>;
+
+  // Write ONLY hiding commitments and incremented public headcount to the ledger.
+  runningTotalCommitments.insert(rid, computeTotalCommitment(newTotal, newSalt));
+  const commitment = computeVoucherCommitment(rid, recipientKey, salaryAmount, voucherSalt);
+  voucherTree.insert(commitment);
+
+  payrollRuns.insert(
+    rid,
+    PayrollRun {
+      budgetCap: run.budgetCap,
+      minAllocation: run.minAllocation,
+      maxAllocation: run.maxAllocation,
+      expectedHeadcount: run.expectedHeadcount,
+      issuedCount: (run.issuedCount + 1) as Uint<16>,
+      claimedCount: run.claimedCount,
+      status: run.status,
+    }
+  );
+}
+
+export circuit claimVoucher(runId: Uint<32>): [] {
+  const rid = disclose(runId);
+  assert(payrollRuns.member(rid), "Payroll run does not exist");
+
+  const run = payrollRuns.lookup(rid);
+  assert(run.claimedCount < run.issuedCount, "All issued vouchers for this run have been claimed");
+
+  const sk = localSecretKey();
+  const [salaryAmount, voucherSalt] = getClaimVoucherSecret();
+  const instance = kernel.self().bytes;
+
+  // Derive employee identity and recompute the hiding voucher commitment locally.
+  const employeeKey = deriveEmployeeKey(sk as Bytes<32>, instance);
+  const commitment = computeVoucherCommitment(rid, employeeKey, salaryAmount, voucherSalt);
+
+  // Verify HistoricMerkleTree membership in ZK without disclosing WHICH leaf was claimed.
+  const path = getVoucherPath(commitment);
+  assert(path.leaf == commitment, "Merkle path leaf does not match voucher commitment");
+  assert(
+    voucherTree.checkRoot(disclose(merkleTreePathRoot<10, Bytes<32>>(path))),
+    "Voucher commitment is not present in the payroll Merkle tree"
+  );
+
+  // Publish only an unlinkable nullifier to prevent double-claiming.
+  const nullifier = disclose(deriveNullifier(sk as Bytes<32>, rid, voucherSalt, instance)) as Nullifier;
+  assert(!claimedNullifiers.member(nullifier), "Voucher has already been claimed");
+
+  claimedNullifiers.insert(nullifier);
+  payrollRuns.insert(
+    rid,
+    PayrollRun {
+      budgetCap: run.budgetCap,
+      minAllocation: run.minAllocation,
+      maxAllocation: run.maxAllocation,
+      expectedHeadcount: run.expectedHeadcount,
+      issuedCount: run.issuedCount,
+      claimedCount: (run.claimedCount + 1) as Uint<16>,
+      status: run.status,
+    }
+  );
+}
+
+// --- Selective Disclosure Circuits ------------------------------------------
+
+// Employee proves `salary >= thresholdAmount` for a specific verifierTag without
+// disclosing exact salary, employee identity, or which voucher leaf they own.
+export circuit proveIncomeThreshold(
+  runId: Uint<32>,
+  thresholdAmount: Uint<64>,
+  verifierTag: Bytes<32>
+): AttestationId {
+  const rid = disclose(runId);
+  const threshold = disclose(thresholdAmount);
+  const vTag = disclose(verifierTag);
+
+  assert(payrollRuns.member(rid), "Payroll run does not exist");
+  assert(threshold > 0, "Threshold must be positive");
+  assert(vTag != default<Bytes<32>>, "Verifier tag cannot be empty");
+
+  const sk = localSecretKey();
+  const [salaryAmount, voucherSalt] = getClaimVoucherSecret();
+  const instance = kernel.self().bytes;
+
+  const employeeKey = deriveEmployeeKey(sk as Bytes<32>, instance);
+  const commitment = computeVoucherCommitment(rid, employeeKey, salaryAmount, voucherSalt);
+
+  const path = getVoucherPath(commitment);
+  assert(path.leaf == commitment, "Merkle path leaf does not match voucher commitment");
+  assert(
+    voucherTree.checkRoot(disclose(merkleTreePathRoot<10, Bytes<32>>(path))),
+    "Voucher commitment is not present in the payroll Merkle tree"
+  );
+
+  // Core ZK range assertion: exact salary remains private!
+  assert(salaryAmount >= threshold, "Verified salary is below the requested income threshold");
+
+  const attestationId = disclose(
+    deriveAttestationId(employeeKey, rid, vTag, threshold, instance)
+  ) as AttestationId;
+
+  incomeAttestations.insert(
+    attestationId,
+    IncomeAttestation {
+      runId: rid,
+      thresholdAmount: threshold,
+      verifierTag: vTag,
+    }
+  );
+
+  return attestationId;
+}
+
+export circuit finalizeRun(runId: Uint<32>): [] {
+  requireTreasuryAdmin();
+
+  const rid = disclose(runId);
+  assert(payrollRuns.member(rid), "Payroll run does not exist");
+
+  const run = payrollRuns.lookup(rid);
+  assert(run.status == RunStatus.Open, "Payroll run is already finalized");
+  assert(run.issuedCount > 0, "Cannot finalize a payroll run with zero issued vouchers");
+
+  payrollRuns.insert(
+    rid,
+    PayrollRun {
+      budgetCap: run.budgetCap,
+      minAllocation: run.minAllocation,
+      maxAllocation: run.maxAllocation,
+      expectedHeadcount: run.expectedHeadcount,
+      issuedCount: run.issuedCount,
+      claimedCount: run.claimedCount,
+      status: RunStatus.Finalized,
+    }
+  );
+}
+
+// Authorized Auditor or Treasury Admin selectively discloses ONLY the aggregate
+// total spent for a finalized run while individual salaries remain 100% private.
+export circuit discloseRunTotal(runId: Uint<32>): [] {
+  requireAuditorOrAdmin();
+
+  const rid = disclose(runId);
+  assert(payrollRuns.member(rid), "Payroll run does not exist");
+
+  const run = payrollRuns.lookup(rid);
+  assert(run.status == RunStatus.Finalized, "Payroll run must be finalized before aggregate audit disclosure");
+
+  const [finalTotal, finalSalt] = getAccumulatorOpening(rid);
+  assert(
+    runningTotalCommitments.lookup(rid) == computeTotalCommitment(finalTotal, finalSalt),
+    "Audit opening does not match committed running total"
+  );
+  assert(finalTotal <= run.budgetCap, "Audited total exceeds budget cap");
+
+  auditedTotals.insert(rid, disclose(finalTotal));
+  payrollRuns.insert(
+    rid,
+    PayrollRun {
+      budgetCap: run.budgetCap,
+      minAllocation: run.minAllocation,
+      maxAllocation: run.maxAllocation,
+      expectedHeadcount: run.expectedHeadcount,
+      issuedCount: run.issuedCount,
+      claimedCount: run.claimedCount,
+      status: RunStatus.Audited,
+    }
+  );
+}

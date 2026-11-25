@@ -1,0 +1,199 @@
+{
+  "manifest-version": "1",
+  "compiler-version": "0.36.1",
+  "compiler-commit": "7fa3a117c5e7efe9d2c51da04263e5f0b3509144",
+  "language-version": "0.28.0",
+  "runtime-version": "0.21.0",
+  "compiler": {
+    "type": "directory",
+    "contract-info.json": {
+      "type": "file",
+      "size": 16396,
+      "hash": "917751a50b2792eef26283d0412bc4b817244ae94771851f86c3a68a293ed1a6"
+    }
+  },
+  "contract": {
+    "type": "directory",
+    "index.d.ts": {
+      "type": "file",
+      "size": 11698,
+      "hash": "15d98e7cb2fef7a4610a577dc812dd81c1592a36677dceeee6c90715838a0e28"
+    },
+    "index.js": {
+      "type": "file",
+      "size": 219486,
+      "hash": "8e9acf850037f588324bc2aadf546571daa8f02357cf700817f4722862377c0d"
+    },
+    "index.js.map": {
+      "type": "file",
+      "size": 10027,
+      "hash": "a66c3608caba750532b10abb3de8900ffa510f1400e92646eb040a8f4c16d4ca"
+    }
+  },
+  "zkir": {
+    "type": "directory",
+    "claimVoucher.bzkir": {
+      "type": "file",
+      "size": 4238,
+      "hash": "1b8b63b6057fafe496bf0c6530195bdcd5d105ca0a80e593aa5dd94f4cc01437"
+    },
+    "claimVoucher.zkir": {
+      "type": "file",
+      "size": 14175,
+      "hash": "bda4bce2ce5d3ffafc7d9d6d724d5f1864a5a595daf6cd6a8ea1c8cdc1f742af"
+    },
+    "createPayrollRun.bzkir": {
+      "type": "file",
+      "size": 1933,
+      "hash": "35292dfac1e98268d78b2c59fa0a8026eb8d62eac8d812ec2f0e8b574c0a1190"
+    },
+    "createPayrollRun.zkir": {
+      "type": "file",
+      "size": 6545,
+      "hash": "c7219107a8cbe95809f430d85ec4218d21883833319ba1645159bf4210564e8b"
+    },
+    "discloseRunTotal.bzkir": {
+      "type": "file",
+      "size": 2493,
+      "hash": "859ca2a78ee753b82f798ad1edb947c3b39cd6f1bdce98a6e5d5d55e31e99497"
+    },
+    "discloseRunTotal.zkir": {
+      "type": "file",
+      "size": 8557,
+      "hash": "18305fc508c9717e1c6074c964c0a12d7d0e449472e10ddb9d45223067ec3605"
+    },
+    "finalizeRun.bzkir": {
+      "type": "file",
+      "size": 1259,
+      "hash": "4a5e057860cf823adf1f67003325c1015ed856b3396e1947003753b12b7d0aaa"
+    },
+    "finalizeRun.zkir": {
+      "type": "file",
+      "size": 4561,
+      "hash": "47e8bd7719eb5ecc53c1a74288f0afce3ad6c940b5a20f399bac75dd546ff91e"
+    },
+    "issueVoucher.bzkir": {
+      "type": "file",
+      "size": 4175,
+      "hash": "caa61c8f0ac73049879e90b5ed1ed3549d7d32f3ea0a8f3d5802389e2b88591f"
+    },
+    "issueVoucher.zkir": {
+      "type": "file",
+      "size": 13772,
+      "hash": "ef9b38bb9e374ca17a1355bea2d5865326718bef812d64746400fb5b730b9cb6"
+    },
+    "proveIncomeThreshold.bzkir": {
+      "type": "file",
+      "size": 3989,
+      "hash": "8e743c5fad59d598525a652225611b3b2198cf657fb22136cafa86ddd6bc4650"
+    },
+    "proveIncomeThreshold.zkir": {
+      "type": "file",
+      "size": 13123,
+      "hash": "fcc857ed3f142f4d4f5fc4719ef0662cfafbe7875cf689cb584931074f0cc741"
+    },
+    "rotateAdmin.bzkir": {
+      "type": "file",
+      "size": 817,
+      "hash": "2577836c965a20a31b40a95dd126e9c88525c8779a72d6eade55fbab717a6c1a"
+    },
+    "rotateAdmin.zkir": {
+      "type": "file",
+      "size": 2986,
+      "hash": "dd12f04b2e3ac7b17304f957b67f8532ca89bf2affd228ea097c7a3a6387fce9"
+    },
+    "setComplianceAuditor.bzkir": {
+      "type": "file",
+      "size": 833,
+      "hash": "8dda1c64e3a481312bb9ceb44a217519971e07919770e33f7afd7a378aa68901"
+    },
+    "setComplianceAuditor.zkir": {
+      "type": "file",
+      "size": 3002,
+      "hash": "723fdbccc3467f00ed2f5ccd27e2c97c574b1ce3a28bf0333793fa757c225bf2"
+    }
+  },
+  "keys": {
+    "type": "directory",
+    "claimVoucher.prover": {
+      "type": "file",
+      "size": 22552990,
+      "hash": "8c3a52b4cf1badb7c4df69d73abafb6e0355ca20ea24c33b6d77af99b4c3d723"
+    },
+    "claimVoucher.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "1dca068ed7385b5fca3be043e2220347650e760f437c9f26157ea0a13813e1f5"
+    },
+    "createPayrollRun.prover": {
+      "type": "file",
+      "size": 11278493,
+      "hash": "c4e7cd74059c2a520b55ec7ea8c48033ae7b6a887f625f281820524fd26c0ff6"
+    },
+    "createPayrollRun.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "341cd3b675c5746466454f155d765f99f911c28e89c7c50187497650a5084743"
+    },
+    "discloseRunTotal.prover": {
+      "type": "file",
+      "size": 22551245,
+      "hash": "4509d8b5f0263aef90b70fefef060b64d49b20d2498deeecf3f1111f6d3e3943"
+    },
+    "discloseRunTotal.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "7d828959415665c13b176d860539612896ef0b6f8e4b74fb7c64a6ee04d1dc8f"
+    },
+    "finalizeRun.prover": {
+      "type": "file",
+      "size": 11277819,
+      "hash": "daa91ab366a7949c2506f84c6143f57f9e48927802e591f15c6917960ca65ee3"
+    },
+    "finalizeRun.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "5a81babab2fe6bd98eaf9f8c5df5a03193eacdbfbb20fadeae8f45127e1750dc"
+    },
+    "issueVoucher.prover": {
+      "type": "file",
+      "size": 22552927,
+      "hash": "0647cc8eedb10786c8b655270b2f1f0200d1a5f5df577a8c572c3ce5f6b5a198"
+    },
+    "issueVoucher.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "8c525ae4691e46bf7c8a2733ca0f4b2c8f405affe5de320f27762e6d025989d7"
+    },
+    "proveIncomeThreshold.prover": {
+      "type": "file",
+      "size": 22552741,
+      "hash": "478821461b29ab12e0d524db41d2ab872a58e6f3d8d67c04fe16313ba6042c26"
+    },
+    "proveIncomeThreshold.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "9726c9204d90b553cc8649feaadaef1c45821438fd3c4aac4f600920418dc5ab"
+    },
+    "rotateAdmin.prover": {
+      "type": "file",
+      "size": 11277377,
+      "hash": "b1c6ce43942f06be6ffea68f2978c94f318252ba79477fcbeee8443542d40538"
+    },
+    "rotateAdmin.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "64b444aaf787867c7428e3389d99e41b665b49d5d46de2ba7040ca400131a5d4"
+    },
+    "setComplianceAuditor.prover": {
+      "type": "file",
+      "size": 11277393,
+      "hash": "67b97ce97e57bb6ad86ef7d4ef7ee5642c468aceff2b7669e0ee4f27e4a5c966"
+    },
+    "setComplianceAuditor.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "9336b8b53bd2b3466bb2ff5e8246619a4602f06b0925a3afdb68c4146fd76b52"
+    }
+  }
+}

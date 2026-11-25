@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.tools/
+.akindo_wave3.json
+.env
+.env.local
+*.log
+.DS_Store
+coverage/
+contract/managed/*/keys/
+contract/managed/*/zkir/
+USER_ACTION_NEEDED.md

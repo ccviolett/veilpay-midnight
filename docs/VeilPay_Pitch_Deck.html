@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VeilPay — Shielded Corporate Payroll on Midnight (Wave 3)</title>
+<style>
+  @page {
+    size: 1280px 720px;
+    margin: 0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #060913;
+    color: #e6edf7;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .slide {
+    width: 1280px;
+    height: 720px;
+    padding: 56px 72px 48px;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+    background:
+      radial-gradient(circle at 88% 14%, rgba(99, 102, 241, 0.22), transparent 42%),
+      radial-gradient(circle at 12% 88%, rgba(16, 185, 129, 0.14), transparent 40%),
+      linear-gradient(155deg, #070b17 0%, #0b1224 55%, #070a14 100%);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    margin: 0 auto 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  @media print {
+    .slide { margin: 0; border-bottom: none; }
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+  }
+  .pill {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    border: 1px solid rgba(129, 140, 248, 0.45);
+    background: rgba(99, 102, 241, 0.15);
+    color: #c7d2fe;
+  }
+  .pill-green {
+    border-color: rgba(52, 211, 153, 0.45);
+    background: rgba(16, 185, 129, 0.15);
+    color: #a7f3d0;
+  }
+  .body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+  h1 {
+    font-size: 64px;
+    line-height: 1.06;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(90deg, #ffffff 0%, #a5b4fc 55%, #6ee7b7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  h2 {
+    font-size: 38px;
+    line-height: 1.18;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    color: #f8fafc;
+  }
+  .subtitle {
+    font-size: 24px;
+    line-height: 1.45;
+    color: #cbd5e1;
+    max-width: 960px;
+  }
+  .tagline {
+    font-size: 20px;
+    color: #6ee7b7;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .card {
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 24px 26px;
+  }
+  .card-accent {
+    border-color: rgba(129, 140, 248, 0.45);
+    background: rgba(30, 27, 75, 0.45);
+  }
+  .card-green {
+    border-color: rgba(52, 211, 153, 0.4);
+    background: rgba(6, 78, 59, 0.25);
+  }
+  .card-red {
+    border-color: rgba(248, 113, 113, 0.4);
+    background: rgba(127, 29, 29, 0.22);
+  }
+  .card h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 10px;
+  }
+  .card p, .card li {
+    font-size: 16px;
+    line-height: 1.55;
+    color: #cbd5e1;
+  }
+  ul { padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+  li { font-size: 17px; line-height: 1.5; color: #cbd5e1; }
+  strong { color: #f8fafc; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+    font-size: 0.9em;
+    background: rgba(148, 163, 184, 0.16);
+    padding: 2px 7px;
+    border-radius: 6px;
+    color: #93c5fd;
+  }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+  .step-box {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(129, 140, 248, 0.3);
+    border-radius: 14px;
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-num {
+    font-size: 13px;
+    font-weight: 700;
+    color: #818cf8;
+    text-transform: uppercase;
+  }
+  .step-title { font-size: 16px; font-weight: 700; color: #fff; }
+  .step-desc { font-size: 14px; line-height: 1.45; color: #cbd5e1; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(15, 23, 42, 0.72);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+  }
+  th, td {
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    font-size: 16px;
+    line-height: 1.48;
+  }
+  th {
+    background: rgba(99, 102, 241, 0.18);
+    color: #e0e7ff;
+    font-weight: 700;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  tr:last-child td { border-bottom: none; }
+  .metric-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+  .metric {
+    background: rgba(15, 23, 42, 0.78);
+    border: 1px solid rgba(52, 211, 153, 0.32);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .metric-val {
+    font-size: 36px;
+    font-weight: 800;
+    color: #6ee7b7;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .metric-label { font-size: 14px; color: #94a3b8; }
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #64748b;
+    padding-top: 14px;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+  }
+  .callout {
+    padding: 16px 22px;
+    border-radius: 12px;
+    border-left: 4px solid #6ee7b7;
+    background: rgba(16, 185, 129, 0.1);
+    font-size: 17px;
+    color: #d1fae5;
+  }
+</style>
+</head>
+<body>
+
+<!-- Slide 1 -->
+<section class="slide">
+  <div class="top-bar">
+    <span>Midnight Buildathon · Wave 3 Submission</span>
+    <span class="pill">Apache-2.0 · Topic: midnightntwrk</span>
+  </div>
+  <div class="body">
+    <div class="tagline">Private salaries. Provable budgets. Selective compliance.</div>
+    <h1>VeilPay</h1>
+    <p class="subtitle">Shielded Corporate Payroll &amp; Selective-Disclosure Compliance Vault built natively on <strong>Midnight Network</strong>.</p>
+    <div class="metric-row" style="margin-top: 12px;">
+      <div class="metric"><div class="metric-val">8</div><div class="metric-label">Compiled Compact 0.28 ZK Circuits</div></div>
+      <div class="metric"><div class="metric-val">14 / 14</div><div class="metric-label">Automated Simulator &amp; Privacy Tests</div></div>
+      <div class="metric"><div class="metric-val">0</div><div class="metric-label">Bytes Leaked to Public Ledger</div></div>
+      <div class="metric"><div class="metric-val">v4</div><div class="metric-label">Midnight Lace Wallet Connector</div></div>
+    </div>
+  </div>
+  <div class="footer">
+    <span>Compact 0.28 · compactc 0.36.1 · @midnight-ntwrk/compact-runtime 0.21.0 · Ledger v9</span>
+    <span>Slide 1 / 10</span>
+  </div>
+</section>
+
+<!-- Slide 2 -->
+<section class="slide">
+  <div class="top-bar"><span>01 · The Problem</span><span class="pill">Why Transparent Chains Fail Payroll</span></div>
+  <div class="body">
+    <h2>Transparent Blockchains Break Enterprise Payroll</h2>
+    <div class="grid-2">
+      <div class="card card-red">
+        <h3>Transparent Chains (Ethereum / Solana / L2s)</h3>
+        <ul>
+          <li>Paying contributors publicly broadcasts <strong>every employee's exact salary</strong> to coworkers, competitors, recruiters, and phishing attackers.</li>
+          <li>Permanently links personal employee wallets to employer treasury schedules and burn rate.</li>
+        </ul>
+      </div>
+      <div class="card card-red">
+        <h3>Opaque Privacy Mixers</h3>
+        <ul>
+          <li>Fails <strong>DAO governance</strong>: token holders cannot verify payroll stayed inside approved budget caps or compensation bands.</li>
+          <li>Fails <strong>audits &amp; real life</strong>: employees cannot prove income for mortgages or visas; auditors cannot verify aggregate spend.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout"><strong>Result:</strong> 90%+ of crypto-native DAOs and foundations still fall back to opaque centralized Web2 payroll rails.</div>
+  </div>
+  <div class="footer"><span>VeilPay · Midnight Wave 3</span><span>Slide 2 / 10</span></div>
+</section>
+
+<!-- Slide 3 -->
+<section class="slide">
+  <div class="top-bar"><span>02 · Why Midnight</span><span class="pill">Dual-Ledger Rational Privacy</span></div>
+  <div class="body">
+    <h2>Built Natively for Midnight's Dual-Ledger ZK Model</h2>
+    <p class="subtitle" style="font-size: 20px;">VeilPay is not an EVM port—it relies directly on Compact 0.28 primitives unique to Midnight:</p>
+    <div class="grid-2">
+      <div class="card card-accent">
+        <h3>Public Ledger (<code>ledger</code>)</h3>
+        <p>Enforces global governance rules (<code>budgetCap</code>, salary bands, headcount, lifecycle status) while storing only opaque commitments and unlinkable nullifiers.</p>
+      </div>
+      <div class="card card-green">
+        <h3>Local Private State (<code>witness</code>)</h3>
+        <p>Keeps secret keys, individual salaries, employee identities, and 32-byte blinding salts strictly on each participant's device.</p>
+      </div>
+      <div class="card">
+        <h3>Compile-Time Disclosure Safety (<code>disclose()</code>)</h3>
+        <p>Compact 0.28 statically prevents accidental leakage of private witness values into public ledger state transitions.</p>
+      </div>
+      <div class="card">
+        <h3>Programmable Selective Disclosure</h3>
+        <p>Participants reveal <em>only</em> the exact mathematical proof a counterparty needs (threshold income or aggregate spend)—nothing more.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>VeilPay · Midnight Wave 3</span><span>Slide 3 / 10</span></div>
+</section>
+
+<!-- Slide 4 -->
+<section class="slide">
+  <div class="top-bar"><span>03 · Product Walkthrough</span><span class="pill">End-to-End 5-Step Lifecycle</span></div>
+  <div class="body">
+    <h2>How VeilPay Works End-to-End</h2>
+    <div class="steps">
+      <div class="step-box">
+        <div class="step-num">Step 1</div>
+        <div class="step-title"><code>createPayrollRun</code></div>
+        <div class="step-desc">Treasury sets public governance bounds (<code>$35k</code> cap, <code>$4k–$18k</code> band, headcount <code>3</code>) + hidden <code>$0</code> accumulator commitment.</div>
+      </div>
+      <div class="step-box">
+        <div class="step-num">Step 2</div>
+        <div class="step-title"><code>issueVoucher</code></div>
+        <div class="step-desc">ZK circuit proves <code>min ≤ salary ≤ max</code> and <code>total + salary ≤ cap</code> without publishing any salary or running sum. Appends commitment to <code>HistoricMerkleTree&lt;10&gt;</code>.</div>
+      </div>
+      <div class="step-box">
+        <div class="step-num">Step 3</div>
+        <div class="step-title"><code>claimVoucher</code></div>
+        <div class="step-desc">Employee proves Merkle membership privately and posts an unlinkable <code>nullifier</code>—breaking issuance-to-claim linkage and blocking double-claims.</div>
+      </div>
+      <div class="step-box">
+        <div class="step-num">Step 4</div>
+        <div class="step-title"><code>proveIncomeThreshold</code></div>
+        <div class="step-desc">Employee proves <code>salary ≥ $10,000</code> for a bank or landlord while exact <code>$12,750</code> pay stays 100% hidden.</div>
+      </div>
+      <div class="step-box">
+        <div class="step-num">Step 5</div>
+        <div class="step-title"><code>discloseRunTotal</code></div>
+        <div class="step-desc">Post-<code>finalizeRun</code>, authorized Compliance Auditor reveals <em>only</em> aggregate spend (<code>$29,000</code>)—individual salaries stay shielded.</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>VeilPay · Midnight Wave 3</span><span>Slide 4 / 10</span></div>
+</section>
+
+<!-- Slide 5 -->
+<section class="slide">
+  <div class="top-bar"><span>04 · Cryptographic Architecture</span><span class="pill">Compact 0.28 Security Design</span></div>
+  <div class="body">
+    <h2>Cryptographic Architecture &amp; Security Guarantees</h2>
+    <div class="grid-2">
+      <div class="card card-accent">
+        <h3>8 Real Compiled ZK Circuits</h3>
+        <p>Full <code>zkir-v3</code> proving and verifying keys compiled in 15.8s via native <code>compactc 0.36.1</code> (8 impure + 7 pure circuits, zero errors, zero warnings).</p>
+      </div>
+      <div class="card card-accent">
+        <h3>Zero <code>ownPublicKey()</code> Dependence</h3>
+        <p>All role authorization derives keys via <code>persistentHash([domain, orgId, sk])</code>; employee keys, nullifiers, and attestations bind to <code>kernel.self().bytes</code> to eliminate cross-contract replay.</p>
+      </div>
+      <div class="card card-green">
+        <h3>Dictionary-Attack-Resistant Commitments</h3>
+        <p>Uses <code>persistentCommit</code> with mandatory fresh 32-byte salts (<code>newSalt != prevSalt</code>) so low-entropy integer salaries can never be brute-forced from public state.</p>
+      </div>
+      <div class="card card-green">
+        <h3>Concurrent-Safe <code>HistoricMerkleTree&lt;10&gt;</code></h3>
+        <p>Supports up to 1,024 vouchers per vault while keeping in-flight employee Merkle proofs valid across concurrent issuances.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>VeilPay · Midnight Wave 3</span><span>Slide 5 / 10</span></div>
+</section>
+
+<!-- Slide 6 -->
+<section class="slide">
+  <div class="top-bar"><span>05 · Selective Disclosure Matrix</span><span class="pill pill-green">Zero Over-Disclosure</span></div>
+  <div class="body">
+    <h2>Two-Tier Programmable Selective Disclosure</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 24%;">Stakeholder</th>
+          <th style="width: 38%;">What They Verify On-Chain</th>
+          <th style="width: 38%;">What Remains 100% Shielded</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Public / DAO Members</strong></td>
+          <td>Budget cap respected, salary band respected, headcount &amp; claim counts</td>
+          <td>Individual salaries, employee identities, running spend, which Merkle leaf was claimed</td>
+        </tr>
+        <tr>
+          <td><strong>Mortgage Bank / Landlord</strong></td>
+          <td>Verified ZK attestation: <code>salary ≥ $10,000</code> for <code>Run #1</code></td>
+          <td>Exact salary (<code>$12,750</code>), voucher leaf, employer internals, employee secret/public key</td>
+        </tr>
+        <tr>
+          <td><strong>Compliance Auditor / Board</strong></td>
+          <td>Verified aggregate spend (<code>$29,000 ≤ $35,000</code>) after run finalization</td>
+          <td>Individual salaries, per-employee allocations, employee identities &amp; claim timings</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="footer"><span>VeilPay · Midnight Wave 3</span><span>Slide 6 / 10</span></div>
+</section>
+
+<!-- Slide 7 -->
+<section class="slide">
+  <div class="top-bar"><span>06 · Verification &amp; QA</span><span class="pill pill-green">14 / 14 Real Runtime Tests Passing</span></div>
+  <div class="body">
+    <h2>Zero Mocks: Real Compilation, Tests &amp; Leak Scanning</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>14 / 14 Passing Vitest Suite</h3>
+        <ul>
+          <li>Full 3-employee multi-actor payroll lifecycle on real <code>@midnight-ntwrk/compact-runtime@0.21.0</code>.</li>
+          <li>Hidden budget-cap overflow &amp; salary-band rejections.</li>
+          <li>Double-claim nullifier replay, stolen-voucher, and cross-run replay rejections.</li>
+          <li>False income-threshold &amp; tampered aggregate-audit rejections + RBAC admin rotation.</li>
+          <li>Midnight Lace DApp Connector API v4 integration test.</li>
+        </ul>
+      </div>
+      <div class="card card-green">
+        <h3>Automated Byte-Level Privacy Leak Scanner</h3>
+        <ul>
+          <li>Walks <strong>every public byte array and scalar</strong> on the decoded Midnight ledger after every transaction.</li>
+          <li>Proves <strong>0 leaked secrets</strong> across salaries, salts, running totals, and actor secrets.</li>
+          <li>Includes a <strong>positive leak-detection self-test</strong> confirming the scanner catches intentional plaintext leaks.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>VeilPay · Midnight Wave 3</span><span>Slide 7 / 10</span></div>
+</section>
+
+<!-- Slide 8 -->
+<section class="slide">
+  <div class="top-bar"><span>07 · User Experience</span><span class="pill">Live In-Browser Compact WASM</span></div>
+  <div class="body">
+    <h2>Dual-Ledger X-Ray Console</h2>
+    <div class="grid-3">
+      <div class="card card-accent">
+        <h3>Real Browser Execution</h3>
+        <p>Executes the compiled <code>veilpay.compact</code> contract directly in the browser via <code>compact-runtime</code> + WASM <code>onchain-runtime-v4</code>—judges test immediately with zero setup.</p>
+      </div>
+      <div class="card card-green">
+        <h3>5 Switchable Devices</h3>
+        <p>Flip between <strong>Treasury Admin</strong>, <strong>Alice</strong>, <strong>Bob</strong>, <strong>Charlie</strong>, and <strong>Compliance Auditor</strong> while the live Privacy Audit Banner proves <code>0 secrets leaked</code>.</p>
+      </div>
+      <div class="card">
+        <h3>1-Click Adversarial Demos</h3>
+        <p>Built-in buttons trigger real ZK rejections (Budget Overflow, Double-Claim Replay, False Threshold, Tampered Audit) plus native <code>window.midnight.mnLace</code> v4 wallet support.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>VeilPay · Midnight Wave 3</span><span>Slide 8 / 10</span></div>
+</section>
+
+<!-- Slide 9 -->
+<section class="slide">
+  <div class="top-bar"><span>08 · Market &amp; Business Model</span><span class="pill">Enterprise &amp; DAO Treasury Fit</span></div>
+  <div class="body">
+    <h2>Market Opportunity &amp; Go-to-Market</h2>
+    <div class="grid-3">
+      <div class="card">
+        <h3>Target Customers</h3>
+        <p><strong>Beachhead:</strong> Crypto-native DAOs, protocol foundations, and Midnight ecosystem teams (10–250 contributors, $50k–$2M/mo on-chain).<br><br><strong>Expansion:</strong> Global remote startups &amp; B2B contractor platforms needing compliant stablecoin payroll.</p>
+      </div>
+      <div class="card card-accent">
+        <h3>Business Model</h3>
+        <p><strong>Open-Source Core:</strong> Apache-2.0 Compact contracts drive trust &amp; Midnight ecosystem adoption.<br><br><strong>Enterprise SaaS:</strong> $8–$15/active contractor/month + compliance attestation API for Xero/QuickBooks/tax exports.</p>
+      </div>
+      <div class="card card-green">
+        <h3>Go-to-Market</h3>
+        <p>Dogfood shielded contributor grants with Midnight ecosystem DAOs first, then integrate with multi-sig treasuries (Safe-style workflows) and Midnight Lace wallet.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>VeilPay · Midnight Wave 3</span><span>Slide 9 / 10</span></div>
+</section>
+
+<!-- Slide 10 -->
+<section class="slide">
+  <div class="top-bar"><span>09 · Roadmap &amp; Try It Now</span><span class="pill pill-green">Wave 3 Shipped · Wave 4 Ready</span></div>
+  <div class="body">
+    <h2>Wave 3 Delivered &amp; Wave 4 Roadmap</h2>
+    <div class="grid-2">
+      <div class="card card-green">
+        <h3>Delivered in Wave 3 (Verified Today)</h3>
+        <ul>
+          <li>Full 8-circuit <code>veilpay.compact</code> contract compiled via <code>compactc 0.36.1</code>.</li>
+          <li>Multi-actor simulator + <strong>14/14 passing QA &amp; privacy tests</strong>.</li>
+          <li>Interactive Dual-Ledger X-Ray Web Console + Lace v4 connector.</li>
+        </ul>
+      </div>
+      <div class="card card-accent">
+        <h3>Next in Wave 4</h3>
+        <ul>
+          <li>Native Midnight shielded token settlement (<code>receiveShielded</code> / <code>sendShielded</code>) on Preprod/Preview Testnet.</li>
+          <li>X25519 encrypted off-chain voucher inbox for automated HR delivery.</li>
+          <li>Multi-sig Treasury Admin approvals &amp; CSV batch payroll issuance.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout"><strong>Reproduce locally in 30 seconds:</strong> <code>pnpm install &amp;&amp; pnpm test &amp;&amp; pnpm dev</code></div>
+  </div>
+  <div class="footer"><span>Apache-2.0 · github.com/ccviolett/veilpay-midnight</span><span>Slide 10 / 10</span></div>
+</section>
+
+</body>
+</html>

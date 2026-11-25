@@ -1,0 +1,796 @@
+{
+  "compiler-version": "0.36.1",
+  "compiler-commit": "7fa3a117c5e7efe9d2c51da04263e5f0b3509144",
+  "language-version": "0.28.0",
+  "runtime-version": "0.21.0",
+  "circuits": [
+    {
+      "name": "deriveAdminKey",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "sk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "orgId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "deriveAuditorKey",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "sk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "orgId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "deriveEmployeeKey",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "sk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "instance",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "computeTotalCommitment",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "total",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "salt",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "computeVoucherCommitment",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "runId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        },
+        {
+          "name": "recipientKey",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "salt",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "deriveNullifier",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "sk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "runId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        },
+        {
+          "name": "salt",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "instance",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "deriveAttestationId",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "employeeKey",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "runId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        },
+        {
+          "name": "verifierTag",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "thresholdAmount",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "instance",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "rotateAdmin",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "newAdminKey",
+          "type": {
+            "type-name": "Alias",
+            "name": "AdminPublicKey",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "setComplianceAuditor",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "newAuditorKey",
+          "type": {
+            "type-name": "Alias",
+            "name": "AdminPublicKey",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "createPayrollRun",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "budgetCap",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "minAllocation",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "maxAllocation",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "expectedHeadcount",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Uint",
+        "maxval": 4294967295
+      }
+    },
+    {
+      "name": "issueVoucher",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "runId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "claimVoucher",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "runId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "proveIncomeThreshold",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "runId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        },
+        {
+          "name": "thresholdAmount",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "verifierTag",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Alias",
+        "name": "AttestationId",
+        "type": {
+          "type-name": "Bytes",
+          "length": 32
+        }
+      }
+    },
+    {
+      "name": "finalizeRun",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "runId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "discloseRunTotal",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "runId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    }
+  ],
+  "witnesses": [
+    {
+      "name": "localSecretKey",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Alias",
+        "name": "SecretKey",
+        "type": {
+          "type-name": "Bytes",
+          "length": 32
+        }
+      }
+    },
+    {
+      "name": "getAccumulatorOpening",
+      "arguments": [
+        {
+          "name": "runId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        }
+      ],
+      "result type": {
+        "type-name": "Tuple",
+        "types": [
+          {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          },
+          {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        ]
+      }
+    },
+    {
+      "name": "nextRunSalt",
+      "arguments": [
+        {
+          "name": "runId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        }
+      ],
+      "result type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "getIssueVoucherSecret",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Tuple",
+        "types": [
+          {
+            "type-name": "Bytes",
+            "length": 32
+          },
+          {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          },
+          {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        ]
+      }
+    },
+    {
+      "name": "getClaimVoucherSecret",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Tuple",
+        "types": [
+          {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          },
+          {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        ]
+      }
+    },
+    {
+      "name": "getVoucherPath",
+      "arguments": [
+        {
+          "name": "commitment",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result type": {
+        "type-name": "Struct",
+        "name": "MerkleTreePath",
+        "elements": [
+          {
+            "name": "leaf",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "path",
+            "type": {
+              "type-name": "Vector",
+              "length": 10,
+              "type": {
+                "type-name": "Struct",
+                "name": "MerkleTreePathEntry",
+                "elements": [
+                  {
+                    "name": "sibling",
+                    "type": {
+                      "type-name": "Struct",
+                      "name": "MerkleTreeDigest",
+                      "elements": [
+                        {
+                          "name": "field",
+                          "type": {
+                            "type-name": "Field"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "goes_left",
+                    "type": {
+                      "type-name": "Boolean"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "contracts": [
+  ],
+  "ledger": [
+    {
+      "name": "organizationId",
+      "index": 0,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "treasuryAdmin",
+      "index": 1,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Alias",
+        "name": "AdminPublicKey",
+        "type": {
+          "type-name": "Bytes",
+          "length": 32
+        }
+      }
+    },
+    {
+      "name": "complianceAuditor",
+      "index": 2,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Alias",
+        "name": "AdminPublicKey",
+        "type": {
+          "type-name": "Bytes",
+          "length": 32
+        }
+      }
+    },
+    {
+      "name": "runCount",
+      "index": 3,
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "payrollRuns",
+      "index": 4,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Uint",
+        "maxval": 4294967295
+      },
+      "value": {
+        "type-name": "Struct",
+        "name": "PayrollRun",
+        "elements": [
+          {
+            "name": "budgetCap",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "minAllocation",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "maxAllocation",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "expectedHeadcount",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 65535
+            }
+          },
+          {
+            "name": "issuedCount",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 65535
+            }
+          },
+          {
+            "name": "claimedCount",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 65535
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "type-name": "Enum",
+              "name": "RunStatus",
+              "elements": [
+                "Open",
+                "Finalized",
+                "Audited"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "runningTotalCommitments",
+      "index": 5,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Uint",
+        "maxval": 4294967295
+      },
+      "value": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "auditedTotals",
+      "index": 6,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Uint",
+        "maxval": 4294967295
+      },
+      "value": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      }
+    },
+    {
+      "name": "voucherTree",
+      "index": 7,
+      "exported": true,
+      "storage": "HistoricMerkleTree",
+      "depth": 10,
+      "type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "claimedNullifiers",
+      "index": 8,
+      "exported": true,
+      "storage": "Set",
+      "type": {
+        "type-name": "Alias",
+        "name": "Nullifier",
+        "type": {
+          "type-name": "Bytes",
+          "length": 32
+        }
+      }
+    },
+    {
+      "name": "incomeAttestations",
+      "index": 9,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Alias",
+        "name": "AttestationId",
+        "type": {
+          "type-name": "Bytes",
+          "length": 32
+        }
+      },
+      "value": {
+        "type-name": "Struct",
+        "name": "IncomeAttestation",
+        "elements": [
+          {
+            "name": "runId",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 4294967295
+            }
+          },
+          {
+            "name": "thresholdAmount",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "verifierTag",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
